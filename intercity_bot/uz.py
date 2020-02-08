@@ -1,5 +1,9 @@
 import aiohttp
+import aiofiles
 import json
+import time
+import random
+import os
 from urllib.parse import urlencode
 from intercity_bot.user import User
 
@@ -50,13 +54,12 @@ async def search_stations(user: User, search_request: str):
     return list(map(lambda station: Station(station['title'], station['value']), result))
 
 
-async def search_trains(user: User, station_from_id: int, station_to_id: int, date: str, time: str = '00:00'):
-    result = await api_request(
-        method='train_search/', 
-        parameters={'from': station_from_id, 'to': station_to_id, 'date': date, 'time': time}, 
-        type='get', 
-        user=user
-    )
+async def search_trains(user: User, station_from_id: int, station_to_id: int, date: str, time: str = '00:00', captcha: str = None):
+    parameters = {'from': station_from_id, 'to': station_to_id, 'date': date, 'time': time}
+    if captcha is str:
+        parameters['captcha'] = captcha
+
+    result = await api_request('train_search/', parameters, 'get', user)
 
     if 'error' in result:
         if result['error'] == 1:
@@ -65,3 +68,18 @@ async def search_trains(user: User, station_from_id: int, station_to_id: int, da
             raise UnknownException()
 
     return result
+
+
+async def get_captcha(user: User):
+    cookies = {'_gv_sessid': user.cookie_session}
+    async with aiohttp.ClientSession(cookies=cookies) as session:
+        async with session.get("{}{}".format(API_URL, 'captcha/')) as response:
+            random.seed(time.time())
+            script_dir = os.path.dirname(__file__)
+            filename = "{}/captcha/{}.gif".format(script_dir, random.randint(0, 999_999_999))
+
+            async with aiofiles.open(filename, "wb") as file:
+                await file.write(await response.read())
+                await file.close()
+
+            return filename
