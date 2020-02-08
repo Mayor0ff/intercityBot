@@ -20,6 +20,15 @@ class Station:
         return {'title': self.title, 'id': self.id}
 
 
+class Train:
+    def __init__(self, num, category, travel_time, from_station, to_station):
+        self.num = num
+        self.category = category
+        self.travel_time = travel_time
+        self.from_station = from_station
+        self.to_station = to_station
+
+
 class CaptchaException(Exception):
     pass
 
@@ -29,7 +38,7 @@ class UnknownException(Exception):
 
 
 async def api_request(method: str, parameters: dict, type: str, user: User, lang: str = "ru"):
-    cookies = {'_gv_sessid': user.cookie_session}
+    cookies = {'_gv_sessid': user.cookie_session, '_gv_lang': 'ru'}
     async with aiohttp.ClientSession(cookies=cookies) as session:
         if type == 'get':
             url = "{}{}/{}?{}".format(API_URL, lang, method, urlencode(parameters))
@@ -39,9 +48,9 @@ async def api_request(method: str, parameters: dict, type: str, user: User, lang
                         user.update_cookie_session(response.cookies['_gv_sessid'].value)
                 
                 return json.loads(await response.text())
-        elif type == 'post':
+        elif type == 'post-urlencode':
             url = "{}{}/{}".format(API_URL, lang, method)
-            async with session.post(url) as response:
+            async with session.post(url, data=parameters) as response:
                 if '_gv_sessid' in response.cookies:
                     if user.cookie_session != response.cookies['_gv_sessid'].value:
                         user.update_cookie_session(response.cookies['_gv_sessid'].value)
@@ -56,10 +65,10 @@ async def search_stations(user: User, search_request: str):
 
 async def search_trains(user: User, station_from_id: int, station_to_id: int, date: str, time: str = '00:00', captcha: str = None):
     parameters = {'from': station_from_id, 'to': station_to_id, 'date': date, 'time': time}
-    if captcha is str:
+    if type(captcha) is str:
         parameters['captcha'] = captcha
 
-    result = await api_request('train_search/', parameters, 'get', user)
+    result = await api_request('train_search/', parameters, 'post-urlencode', user)
 
     if 'error' in result:
         if result['error'] == 1:
@@ -67,11 +76,12 @@ async def search_trains(user: User, station_from_id: int, station_to_id: int, da
         else:
             raise UnknownException()
 
-    return result
+    return map(lambda t: Train(t['num'], t['category'], t['travelTime'], 
+                               t['from'], t['to']), result['data']['list'])
 
 
 async def get_captcha(user: User):
-    cookies = {'_gv_sessid': user.cookie_session}
+    cookies = {'_gv_sessid': user.cookie_session, '_gv_lang': 'uk'}
     async with aiohttp.ClientSession(cookies=cookies) as session:
         async with session.get("{}{}".format(API_URL, 'captcha/')) as response:
             random.seed(time.time())
