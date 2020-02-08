@@ -1,6 +1,9 @@
 # Database
 database.db
 
+# Captcha
+captcha/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
