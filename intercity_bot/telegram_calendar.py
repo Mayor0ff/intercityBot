@@ -28,8 +28,10 @@ def create_calendar(year, month):
 
     date_buttons = map(
         lambda date: types.InlineKeyboardButton(
-            text=str(date.day) if date >= datetime.date.today() else "✖️",
-            callback_data=json.dumps({"a": "calendar", "date": date.isoformat()}),
+            text=str(date.day) if date >= today else "✖️",
+            callback_data=json.dumps(
+                {"a": "calendar", "date": date.isoformat()} if date >= today else {"a": "dismiss"}
+            ),
         ),
         calendar.itermonthdates(year, month),
     )
