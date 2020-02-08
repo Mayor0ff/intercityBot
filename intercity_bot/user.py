@@ -1,0 +1,19 @@
+import json
+
+class User:
+
+    def __init__(self, database, user_id, telegram_id, session, cookie_session):
+        self.database = database
+        self.user_id = user_id
+        self.telegram_id = telegram_id
+        self.session = json.loads(session)
+        self.cookie_session = cookie_session
+
+    def update_session(self, session):
+        self.session = session
+        self.database.update_user_session(self, json.dumps(session))
+
+    def update_cookie_session(self, cookie_session):
+        self.cookie_session = cookie_session
+        self.database.update_user_cookie_session(self, cookie_session)
+        
