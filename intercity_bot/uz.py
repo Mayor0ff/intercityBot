@@ -11,6 +11,9 @@ class Station:
         self.title = title
         self.id = id
 
+    def toDict(self):
+        return {'title': self.title, 'id': self.id}
+
 
 async def api_request(method: str, parameters: dict, type: str, lang: str = "ru"):
     async with aiohttp.ClientSession() as session:
@@ -26,4 +29,4 @@ async def api_request(method: str, parameters: dict, type: str, lang: str = "ru"
 
 async def search_stations(search_request: str):
     result = await api_request('train_search/station/', {'term': search_request}, 'get')
-    return map(lambda station: Station(station['title'], station['value']), result)
+    return list(map(lambda station: Station(station['title'], station['value']), result))
