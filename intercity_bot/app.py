@@ -138,6 +138,10 @@ async def handle_callback_query(callback_query: types.CallbackQuery):
 
         await callback_query.answer()
         await ask_date(user, message, date)
+    elif callback_data["a"] == "calendar":
+        date = datetime.datetime.strptime(callback_data["date"], "%Y-%m-%d")
+        user.session["date"] = callback_data["date"]
+        user.update_session(user.session)
 
 
 async def search_station_from(user):
