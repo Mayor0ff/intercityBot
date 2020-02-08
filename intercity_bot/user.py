@@ -6,7 +6,7 @@ class User:
         self.database = database
         self.id = id
         self.telegram_id = telegram_id
-        self.session = json.loads(session)
+        self.session = dict(json.loads(session))
         self.cookie_session = cookie_session
 
     def update_session(self, session):
