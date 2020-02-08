@@ -2,9 +2,9 @@ import json
 
 class User:
 
-    def __init__(self, database, user_id, telegram_id, session, cookie_session):
+    def __init__(self, database, id, telegram_id, session, cookie_session):
         self.database = database
-        self.user_id = user_id
+        self.id = id
         self.telegram_id = telegram_id
         self.session = json.loads(session)
         self.cookie_session = cookie_session
